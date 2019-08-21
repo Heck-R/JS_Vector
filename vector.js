@@ -595,15 +595,17 @@ class Vector {
 
     /**
      * 
-     * Returns true if the vector is positionally identical in every dimensions
+     * Returns true if the given argument can be vectorified and it is positionally identical in every dimensions
      * 
-     * @param {Vectorify-able} vector
+     * @param {any} comparedVariable
      */
-    equals(vector){
-        let vec = Vector.vectorify(vector);
-        let dimensions = Vector.maxDim(this, vec);
+    equals(comparedVariable){
+        if(!Vector.vectorifyable(comparedVariable))
+            return false;
+        let vector = Vector.vectorify(comparedVariable);
+        let dimensions = Vector.maxDim(this, vector);
         for(let dim = 0; dim < dimensions; dim++){
-            if(this.getDim(dim) != vec.getDim(dim))
+            if(this.getDim(dim) != vector.getDim(dim))
                 return false;
         }
         return true;
@@ -611,13 +613,15 @@ class Vector {
     
     /**
      * 
-     * Returns true if the given vector has the same number of dimensions "by nature" and are positionally identical in every dimensions to this
+     * Returns true if the given argument can be vectorified and it has the same number of dimensions "by nature" and are positionally identical in every dimensions to this
      * 
-     * @param {Vectorify-able} vector
+     * @param {any} comparedVariable
      */
-    equalsExactly(vector){
-        let vec = Vector.vectorify(vector);
-        return this.dimensions === vec.dimensions && this.equals(vec);
+    equalsExactly(comparedVariable){
+        if(!Vector.vectorifyable(comparedVariable))
+            return false;
+        let vector = Vector.vectorify(comparedVariable);
+        return this.dimensions === vector.dimensions && this.equals(vector);
     }
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -878,6 +882,16 @@ class Vector {
      */
     static distance(vector1, vector2){
         return new Vector(vector1).distance(vector2);
+    }
+
+    /**
+     * 
+     * Returns whether or not the (weak)vectorify function would throw an error
+     * 
+     * @param {any} vectorCandidate 
+     */
+    static vectorifyable(vectorCandidate){
+        return typeof vectorCandidate == 'object';
     }
 
     /**

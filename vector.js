@@ -69,7 +69,7 @@ class Vector {
     constructorForCopy(vector){
         this.innerCords = [];
         for(let dim = 0; dim < vector.dimensions; dim++){
-            this.innerCords.push(vector.getDimension(dim));
+            this.innerCords.push(vector.getDim(dim));
         }
     }
 
@@ -172,12 +172,29 @@ class Vector {
 
     /**
      * 
+     * (Same as getDim but with a shorter and less formal name)
      * Returns a given dimension (counts from 0)
      * If the dimension parameter is higher then this vector's dimensions or less then 0 then this returns 0
      * 
      * @param {int} dimension 
      */
-    getDimension(dimension){
+    dim(dimension){
+        if(0 <= dimension && dimension < this.dimensions){
+            return this.innerCords[dimension];
+        } else{
+            return 0;
+        }
+    }
+
+    /**
+     * 
+     * (Same as dim but with a more formal name)
+     * Returns a given dimension (counts from 0)
+     * If the dimension parameter is higher then this vector's dimensions or less then 0 then this returns 0
+     * 
+     * @param {int} dimension 
+     */
+    getDim(dimension){
         if(0 <= dimension && dimension < this.dimensions){
             return this.innerCords[dimension];
         } else{
@@ -190,10 +207,12 @@ class Vector {
      * Sets the given dimension (counts from 0)
      * If the dimension parameter is higher then this vector's dimensions then this will be promoted to that dimension.
      * 
+     * Returns itself so the function is chainable
+     * 
      * @param {int} dimension 
      * @param {float} value 
      */
-    setDimension(dimension, value){
+    setDim(dimension, value){
         this.promote(dimension + 1);
         this.innerCords[dimension] = value;
         
@@ -246,66 +265,66 @@ class Vector {
     get length(){
         let result = 0;
         for(let dim = 0; dim < this.dimensions; dim++){
-            result += Math.pow(this.getDimension(dim), 2);
+            result += Math.pow(this.getDim(dim), 2);
         }
         return Math.sqrt(result);
     }
 
     /**
      * 
-     * Same as getDimension(0)
+     * Same as getDim(0)
      * 
      */
     get x(){
-        return this.getDimension(0);
+        return this.getDim(0);
     }
 
     /**
      * 
-     * Same as setDimension(0, value)
+     * Same as setDim(0, value)
      * 
      * @param {float} value
      */
     set x(value){
-        this.setDimension(0, value);
+        this.setDim(0, value);
     }
 
     /**
      * 
-     * Same as getDimension(1)
+     * Same as getDim(1)
      * 
      */
     get y(){
-        return this.getDimension(1);
+        return this.getDim(1);
     }
 
     /**
      * 
-     * Same as setDimension(1, value)
+     * Same as setDim(1, value)
      * 
      * @param {float} value
      */
     set y(value){
-        this.setDimension(1, value);
+        this.setDim(1, value);
     }
 
     /**
      * 
-     * Same as getDimension(2)
+     * Same as getDim(2)
      * 
      */
     get z(){
-        return this.getDimension(2);
+        return this.getDim(2);
     }
 
     /**
      * 
-     * Same as setDimension(2, value)
+     * Same as setDim(2, value)
      * 
      * @param {float} value
      */
     set z(value){
-        this.setDimension(2, value);
+        this.setDim(2, value);
     }
     
     /**
@@ -418,7 +437,7 @@ class Vector {
         } else if(typeof addition == 'object'){
             let realVec = Vector.vectorify(addition);
             this.promote(realVec.dimensions);
-            this.map((dim, index) => dim + realVec.getDimension(index));
+            this.map((dim, index) => dim + realVec.getDim(index));
         } else{
             throw "Wrong argument";
         }
@@ -448,7 +467,7 @@ class Vector {
         } else if(typeof substraction == 'object'){
             let realVec = Vector.vectorify(substraction);
             this.promote(realVec.dimensions);
-            this.map((dim, index) => dim - realVec.getDimension(index));
+            this.map((dim, index) => dim - realVec.getDim(index));
         } else{
             throw "Wrong argument";
         }
@@ -513,7 +532,7 @@ class Vector {
         calcMatrix.colNum = expectedDimensions
 
         for(let dim = 0; dim < expectedDimensions; dim++)
-            this.setDimension(dim, Math.pow(-1, dim) * Matrix.removeCol(calcMatrix, dim).determinant() );
+            this.setDim(dim, Math.pow(-1, dim) * Matrix.removeCol(calcMatrix, dim).determinant() );
         
 
         return this;
@@ -535,7 +554,7 @@ class Vector {
         let res = 0;
 
         for(let dim = 0; dim < dimensions; dim++){
-            res += this.getDimension(dim) * vector.getDimension(dim);
+            res += this.getDim(dim) * vector.getDim(dim);
         }
 
         return res;
@@ -584,7 +603,7 @@ class Vector {
         let vec = Vector.vectorify(vector);
         let dimensions = Vector.maxDim(this, vec);
         for(let dim = 0; dim < dimensions; dim++){
-            if(this.getDimension(dim) != vec.getDimension(dim))
+            if(this.getDim(dim) != vec.getDim(dim))
                 return false;
         }
         return true;
@@ -619,7 +638,7 @@ class Vector {
 
         let dimensions = Vector.maxDim(this, vec);
         for(let dim = 0; dim < dimensions; dim++){
-            result += Math.pow(this.getDimension(dim) - vec.getDimension(dim), 2);
+            result += Math.pow(this.getDim(dim) - vec.getDim(dim), 2);
         }
 
         return Math.sqrt(result);

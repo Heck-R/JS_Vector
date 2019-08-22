@@ -565,14 +565,23 @@ class Vector {
 
     /**
      * 
-     * Div function for every dimension one by one
+     * If the parameter is a(n):
+     * - Number: Div function for every dimension one by one
+     * - Vectorify-able: divides the corresponding dimensions with one another
      * 
      * Returns itself so the function is chainable
      * 
-     * @param {float} divisional 
+     * @param {Vectorify-able|float} divisional 
      */
     div(divisional){
-        this.map(dim => dim / divisional);
+        if(isNumber(divisional))
+            this.map(dim => dim / divisional);
+        else if(Vector.vectorifyable(divisional)){
+            let div = Vector.vectorify(divisional);
+            this.map((dim, pos) => dim / div.dim(pos));
+        } else
+            throw 'Wrong argument';
+
         return this;
     }
     
@@ -580,14 +589,23 @@ class Vector {
 
     /**
      * 
-     * Modulo function for every dimension one by one
+     * If the parameter is a(n):
+     * - Integer: Modulo function for every dimension one by one
+     * - Vectorify-able: divides the corresponding dimensions with one another
      * 
      * Returns itself so the function is chainable
      * 
-     * @param {int} mod 
+     * @param {Vectorify-able|int} mod 
      */
     mod(mod){
-        this.map(dim => mathMod(dim, mod));
+        if(isNumber(divisional))
+            this.map(dim => mathMod(dim, mod));
+        else if(Vector.vectorifyable(divisional)){
+            let div = Vector.vectorify(divisional);
+            this.map((dim, pos) => mathMod(dim, div.dim(pos)));
+        } else
+            throw 'Wrong argument';
+
         return this;
     }
 
@@ -834,7 +852,7 @@ class Vector {
      * Returns the copy of the divided value of the first argument's Vector representation if there is such
      * 
      * @param {Vectorify-able} vector
-     * @param {float} divisional
+     * @param {Vectorify-able|float} divisional
      */
     static div(vector, divisional){
         return new Vector(vector).div(divisional);
@@ -845,7 +863,7 @@ class Vector {
      * Returns the copy of the mod value of the first the argument's Vector representation if there is such
      * 
      * @param {Vectorify-able} vector
-     * @param {int} mod 
+     * @param {Vectorify-able|int} mod 
      */
     static mod(vector, mod){
         return new Vector(vector).mod(mod);

@@ -434,10 +434,10 @@ class Vector {
         
         if(isNumber(addition)){
             this.map(dim => dim + addition);
-        } else if(typeof addition == 'object'){
-            let realVec = Vector.vectorify(addition);
-            this.promote(realVec.dimensions);
-            this.map((dim, index) => dim + realVec.getDim(index));
+        } else if(Vector.vectorifyable(addition)){
+            let add = Vector.vectorify(addition);
+            this.promote(add.dimensions);
+            this.map((dim, index) => dim + add.getDim(index));
         } else{
             throw "Wrong argument";
         }
@@ -464,10 +464,10 @@ class Vector {
         
         if(isNumber(substraction)){
             this.map(dim => dim - substraction);
-        } else if(typeof substraction == 'object'){
-            let realVec = Vector.vectorify(substraction);
-            this.promote(realVec.dimensions);
-            this.map((dim, index) => dim - realVec.getDim(index));
+        } else if(Vector.vectorifyable(substraction)){
+            let sub = Vector.vectorify(substraction);
+            this.promote(sub.dimensions);
+            this.map((dim, index) => dim - sub.getDim(index));
         } else{
             throw "Wrong argument";
         }
@@ -483,8 +483,8 @@ class Vector {
      * Multiplies this with the given parameter.
      * 
      * If the argument is a(n):
-     * - k Vectorify-able: Returns the cross product of this and the k vectors in order. In case of k vector, the result will be k+2 dimensional and the calculation uses k+2 dimensions from all of them. The cross product is NOT commutative, thus the order of the vectors count.
      * - Number: Every dimension will be multiplied with the given number.
+     * - Vectorify-able: Multiplies the corresponding dimensions with one another
      * 
      * Returns itself so the function is chainable
      * 
@@ -494,11 +494,10 @@ class Vector {
         
         if(isNumber(multiplier)){
             this.map(dim => dim * multiplier);
-        } else if(typeof multiplier == 'object'){
-            let crossArg = [];
-            for(let i = 0; i < arguments.length; i++)
-                crossArg.push(Vector.vectorify(arguments[i]));
-            this.mulCross.apply(this, crossArg);
+        } else if(Vector.vectorifyable(multiplier)){
+            let mul = Vector.vectorify(multiplier);
+            this.promote(mul.dimensions);
+            this.map((dim, pos) => dim * mul.dim(pos));
         } else{
             throw "Wrong argument";
         }
@@ -567,17 +566,18 @@ class Vector {
      * 
      * If the parameter is a(n):
      * - Number: Div function for every dimension one by one
-     * - Vectorify-able: divides the corresponding dimensions with one another
+     * - Vectorify-able: Divides the corresponding dimensions with one another
      * 
      * Returns itself so the function is chainable
      * 
      * @param {Vectorify-able|float} divisional 
      */
     div(divisional){
-        if(isNumber(divisional))
+        if(isNumber(divisional)){
             this.map(dim => dim / divisional);
-        else if(Vector.vectorifyable(divisional)){
+        } else if(Vector.vectorifyable(divisional)){
             let div = Vector.vectorify(divisional);
+            this.promote(div.dimensions);
             this.map((dim, pos) => dim / div.dim(pos));
         } else
             throw 'Wrong argument';
@@ -591,17 +591,18 @@ class Vector {
      * 
      * If the parameter is a(n):
      * - Integer: Modulo function for every dimension one by one
-     * - Vectorify-able: divides the corresponding dimensions with one another
+     * - Vectorify-able: Mods the corresponding dimensions with one another
      * 
      * Returns itself so the function is chainable
      * 
      * @param {Vectorify-able|int} modulo 
      */
     mod(modulo){
-        if(isNumber(modulo))
+        if(isNumber(modulo)){
             this.map(dim => mathMod(dim, modulo));
-        else if(Vector.vectorifyable(modulo)){
+        } else if(Vector.vectorifyable(modulo)){
             let mod = Vector.vectorify(modulo);
+            this.promote(mod.dimensions);
             this.map((dim, pos) => mathMod(dim, mod.dim(pos)));
         } else
             throw 'Wrong argument';

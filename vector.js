@@ -804,7 +804,7 @@ class Vector {
      * @param {Vectorify-able|float} multiplier
      */
     static mul(vector, ...multipliers){
-        return new Vector(vector).mul(multipliers);
+        return new Vector(vector).mul(...multipliers);
     }
 
     /**

@@ -595,14 +595,14 @@ class Vector {
      * 
      * Returns itself so the function is chainable
      * 
-     * @param {Vectorify-able|int} mod 
+     * @param {Vectorify-able|int} modulo 
      */
-    mod(mod){
-        if(isNumber(divisional))
-            this.map(dim => mathMod(dim, mod));
-        else if(Vector.vectorifyable(divisional)){
-            let div = Vector.vectorify(divisional);
-            this.map((dim, pos) => mathMod(dim, div.dim(pos)));
+    mod(modulo){
+        if(isNumber(modulo))
+            this.map(dim => mathMod(dim, modulo));
+        else if(Vector.vectorifyable(modulo)){
+            let mod = Vector.vectorify(modulo);
+            this.map((dim, pos) => mathMod(dim, mod.dim(pos)));
         } else
             throw 'Wrong argument';
 
@@ -863,10 +863,10 @@ class Vector {
      * Returns the copy of the mod value of the first the argument's Vector representation if there is such
      * 
      * @param {Vectorify-able} vector
-     * @param {Vectorify-able|int} mod 
+     * @param {Vectorify-able|int} modulo 
      */
-    static mod(vector, mod){
-        return new Vector(vector).mod(mod);
+    static mod(vector, modulo){
+        return new Vector(vector).mod(modulo);
     }
 
     /**

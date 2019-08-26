@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: vector.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: vector.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>
+/**
+ * 
+ * The Vector class represents an "n" dimensional vector
+ * 
+ * Dependecies:
+ * - misc.js
+ * - matrix.js (cross product)
+ * 
+ */
+class Vector {
+
+    /**
+     * 
+     * Creates a Vector.
+     * The arguments can be:
+     * - Nothing: The Vector will be 0 dimensional
+     * - One Vector: In this case this is a copy constructor
+     * - A random object (except a "Number"): In this case searches for x,y,z coordinates, it's dimension becomes the highest possible and inherits the x,y,z coordinates
+     * - A JSON string of the above works the same
+     * - arguments[0] == 'init' and arguments[1] a number which will be the vector's dimensions (every dimension's vaule is arguments[2] or 0 if omitted)
+     * - One number parameter for every desired dimension. The given numbers will be the dimensions values
+     * - An array that contains one number parameter for every desired dimension. The given numbers will be the dimensions values
+     * 
+     */
+    constructor(){
+
+        this.innerCords;
+
+        if(arguments.length === 0){
+            this.constructorForEmpty();
+        } else if( isNumber(arguments[0]) ){
+            this.constructorForNumbers.apply(this, arguments);
+        } else if(typeof arguments[0] === 'object'){
+            if(Vector.isVector(arguments[0]))
+                this.constructorForCopy.apply(this, arguments);
+            else if(Array.isArray(arguments[0]))
+                this.constructorForNumbers.apply(this, arguments[0]);
+            else
+                this.constructorForObject.apply(this, arguments);
+        } else if(typeof arguments[0] === 'string'){
+            if(arguments[0] === 'init')
+                this.constructorForInit(parseInt(arguments[1]), parseFloat( arguments[2]));
+            else
+                this.constructorForObject(JSON.parse(arguments[0]));
+        } else{
+            throw "Wrong argument(s)";
+        }
+
+    }
+
+    /**
+     * 
+     * Helper for the constructor (not for outer useage)
+     * Constructor: Empty
+     * 
+     */
+    constructorForEmpty(){
+        this.innerCords = [];
+    }
+
+    /**
+     * 
+     * Helper for the constructor (not for outer useage)
+     * Constructor: Copy
+     * 
+     * @param {Vector} vector 
+     */
+    constructorForCopy(vector){
+        this.innerCords = [];
+        for(let dim = 0; dim &lt; vector.dimensions; dim++){
+            this.innerCords.push(vector.getDim(dim));
+        }
+    }
+
+    /**
+     * 
+     * Helper for the constructor (not for outer useage)
+     * Constructor: Object
+     * 
+     * @param {Object} object 
+     */
+    constructorForObject(object){
+        if(object.z !== undefined)
+            this.innerCords = createArray(3, Number);
+        else if(object.y !== undefined)
+            this.innerCords = createArray(2, Number);
+        else if(object.x !== undefined)
+            this.innerCords = createArray(1, Number);
+        else
+            this.innerCords = createArray(0, Number);
+        
+        if(object.x !== undefined)
+            this.innerCords[0] = parseFloat(object.x);
+        if(object.y !== undefined)
+            this.innerCords[1] = parseFloat(object.y);
+        if(object.z !== undefined)
+            this.innerCords[2] = parseFloat(object.z);
+    }
+
+    /**
+     * 
+     * Helper for the constructor (not for outer useage)
+     * Constructor: Init
+     * 
+     * @param {int} dimensions 
+     * @param {float} defaultValue 
+     */
+    constructorForInit(dimensions, defaultValue = 0){
+        this.innerCords = [];
+        for(let dim = 0; dim &lt; dimensions; dim++){
+            this.innerCords.push( parseFloat(defaultValue) );
+        }
+    }
+
+    /**
+     * 
+     * Helper for the constructor (not for outer useage)
+     * Constructor: Numbers
+     * 
+     * @param {...float} dimensionArr 
+     */
+    constructorForNumbers(...dimensionArr){
+        this.innerCords = [];
+        for(let dim = 0; dim &lt; dimensionArr.length; dim++){
+            this.innerCords.push(parseFloat(dimensionArr[dim]));
+        }
+    }
+
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    /**
+     * 
+     * Returns how many dimensions this Vector has
+     * 
+     */
+    get dimensions(){
+        return this.innerCords.length;
+    }
+
+    /**
+     * 
+     * Promotes or demotes this vector according to the parameter
+     * 
+     * @param {int} dimensions
+     */
+    set dimensions(dimensions){
+        if(this.dimensions &lt; dimensions)
+            this.promote(dimensions);
+        else if(dimensions &lt; this.dimensions)
+            this.demote(dimensions);
+    }
+
+    /**
+     * 
+     * Promotes or demotes this vector according to the parameter
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {int} dimensions
+     */
+    setDimensions(dimensions){
+        this.dimensions = dimensions;
+        return this;
+    }
+
+    /**
+     * 
+     * (Same as getDim but with a shorter and less formal name)
+     * Returns a given dimension (counts from 0)
+     * If the dimension parameter is higher then this vector's dimensions or less then 0 then this returns 0
+     * 
+     * @param {int} dimension 
+     */
+    dim(dimension){
+        if(0 &lt;= dimension &amp;&amp; dimension &lt; this.dimensions){
+            return this.innerCords[dimension];
+        } else{
+            return 0;
+        }
+    }
+
+    /**
+     * 
+     * (Same as dim but with a more formal name)
+     * Returns a given dimension (counts from 0)
+     * If the dimension parameter is higher then this vector's dimensions or less then 0 then this returns 0
+     * 
+     * @param {int} dimension 
+     */
+    getDim(dimension){
+        if(0 &lt;= dimension &amp;&amp; dimension &lt; this.dimensions){
+            return this.innerCords[dimension];
+        } else{
+            return 0;
+        }
+    }
+
+    /**
+     * 
+     * Sets the given dimension (counts from 0)
+     * If the dimension parameter is higher then this vector's dimensions then this will be promoted to that dimension.
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {int} dimension 
+     * @param {float} value 
+     */
+    setDim(dimension, value){
+        this.promote(dimension + 1);
+        this.innerCords[dimension] = value;
+        
+        return this;
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Promotes this vector to the given number of dimension(s) given by the parameter if it's higher.
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {int} dimensions
+     * @param {float} defaultValue 0 by default. The new dimensions will have this value.
+     */
+    promote(dimensions, defaultValue = 0){
+        while(this.dimensions &lt; dimensions)
+            this.innerCords.push(defaultValue);
+        
+        return this;
+    }
+
+    /**
+     * 
+     * Demotes this vector to the given number of dimension(s) given by the parameter if it's lower.
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {int} dimensions
+     */
+    demote(dimensions){
+        while(this.dimensions > dimensions)
+            this.innerCords.pop();
+        
+        return this;
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    /**
+     * 
+     * Returns the "interdimensional" linear length of the vector
+     * 
+     */
+    get length(){
+        let result = 0;
+        for(let dim = 0; dim &lt; this.dimensions; dim++){
+            result += Math.pow(this.getDim(dim), 2);
+        }
+        return Math.sqrt(result);
+    }
+
+    /**
+     * 
+     * Same as getDim(0)
+     * 
+     */
+    get x(){
+        return this.getDim(0);
+    }
+
+    /**
+     * 
+     * Same as setDim(0, value)
+     * 
+     * @param {float} value
+     */
+    set x(value){
+        this.setDim(0, value);
+    }
+
+    /**
+     * 
+     * Same as getDim(1)
+     * 
+     */
+    get y(){
+        return this.getDim(1);
+    }
+
+    /**
+     * 
+     * Same as setDim(1, value)
+     * 
+     * @param {float} value
+     */
+    set y(value){
+        this.setDim(1, value);
+    }
+
+    /**
+     * 
+     * Same as getDim(2)
+     * 
+     */
+    get z(){
+        return this.getDim(2);
+    }
+
+    /**
+     * 
+     * Same as setDim(2, value)
+     * 
+     * @param {float} value
+     */
+    set z(value){
+        this.setDim(2, value);
+    }
+    
+    /**
+     * 
+     * Returns a simple obejct with an x coordinate
+     * 
+     */
+    get simple1D(){
+        return {
+            x: this.x,
+        }
+    }
+    
+    /**
+     * 
+     * Returns a simple obejct with an x,y coordinate
+     * 
+     */
+    get simple2D(){
+        return {
+            x: this.x,
+            y: this.y,
+        }
+    }
+    
+    /**
+     * 
+     * Returns a simple obejct with an x,y,z coordinate
+     * 
+     */
+    get simple3D(){
+        return {
+            x: this.x,
+            y: this.y,
+            z: this.z,
+        }
+    }
+
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    /**
+     * 
+     * Follows the rules of Array.splice, except it returns the removed elements as a vector
+     * 
+     * Returns the removed elements as a vector
+     * 
+     * @param {int} start 
+     * @param {int} removeCount 
+     * @param {...float|float[]} newDimensions 
+     */
+    splice(start, removeCount = this.dimensions - start, ...newDimensions){
+        let argsToApply = Array.isArray(newDimensions[0]) ? [start, removeCount].concat(newDimensions[0]) : arguments;
+        return new Vector( Array.prototype.splice.apply(this.innerCords, argsToApply) );
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Changes this to the copy of this vector's given subvector (follows the rules of the Array.slice function)
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {int} start 
+     * @param {int} end 
+     */
+    subVector(start, end = this.dimensions){
+        this.innerCords = this.toArray(start, end);
+        return this;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Negates its coordinates thus reflects itself to the origo.
+     * 
+     * Returns itself so the function is chainable
+     * 
+     */
+    negate(){
+        this.map(dim => -dim);
+        return this;
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Adds the given parameter to this.
+     * 
+     * If the argument is a(n):
+     * - Vectorify-able: Adds the given vector's coordinates to this one by one. If the argument is of a higher dimension, then this will be promoted to that dimension as well.
+     * - Number: The number will be added to the vector's every coordinate.
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {Vectorify-able|float} addition 
+     */
+    add(addition){
+        
+        if(isNumber(addition)){
+            this.map(dim => dim + addition);
+        } else if(Vector.vectorifyable(addition)){
+            let add = Vector.vectorify(addition);
+            this.promote(add.dimensions);
+            this.map((dim, index) => dim + add.getDim(index));
+        } else{
+            throw "Wrong argument";
+        }
+
+        return this;
+
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Subs the given parameter from this.
+     * 
+     * If the argument is a(n):
+     * - Vectorify-able: Subs the given vector's coordinates to this one by one. If the argument is of a higher dimension, then this will be promoted to that dimension as well.
+     * - Number: The number will be subbed to the vector's every coordinate.
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {Vectorify-able|float} substraction 
+     */
+    sub(substraction){
+        
+        if(isNumber(substraction)){
+            this.map(dim => dim - substraction);
+        } else if(Vector.vectorifyable(substraction)){
+            let sub = Vector.vectorify(substraction);
+            this.promote(sub.dimensions);
+            this.map((dim, index) => dim - sub.getDim(index));
+        } else{
+            throw "Wrong argument";
+        }
+
+        return this;
+
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Multiplies this with the given parameter.
+     * 
+     * If the argument is a(n):
+     * - Number: Every dimension will be multiplied with the given number.
+     * - Vectorify-able: Multiplies the corresponding dimensions with one another
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {Vectorify-able|float} multiplier 
+     */
+    mul(multiplier){
+        
+        if(isNumber(multiplier)){
+            this.map(dim => dim * multiplier);
+        } else if(Vector.vectorifyable(multiplier)){
+            let mul = Vector.vectorify(multiplier);
+            this.promote(mul.dimensions);
+            this.map((dim, pos) => dim * mul.dim(pos));
+        } else{
+            throw "Wrong argument";
+        }
+
+        return this;
+
+    }
+
+    /**
+     * 
+     * Becomes the cross product of this and the k vectors.
+     * In case of k vector, the result will be k+2 dimensional, and the calculation uses k+2 dimensions from all of them.
+     * The cross product is NOT commutative, thus the order of the vectors count.
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {...Vectorify-able} multipliers 
+     */
+    mulCross(...multipliers){
+
+        if(multipliers.length == 0)
+            throw "Wrong arguments";
+
+        let expectedDimensions = multipliers.length + 2;
+        this.demote(expectedDimensions);
+
+        let matrixMaterials = multipliers.slice();
+        matrixMaterials.unshift(this);
+
+        let calcMatrix = new Matrix(matrixMaterials);
+        calcMatrix.colNum = expectedDimensions
+
+        for(let dim = 0; dim &lt; expectedDimensions; dim++)
+            this.setDim(dim, Math.pow(-1, dim) * Matrix.removeCol(calcMatrix, dim).determinant() );
+        
+
+        return this;
+
+    }
+
+    /**
+     * 
+     * If the parameter is a(n):
+     * - Vectorify-able: Multiplies with the given vector skalarly.
+     * 
+     * @param {Vectorify-able} multiplier 
+     */
+    mulScal(multiplier){
+
+        let vector = Vector.vectorify(multiplier);
+
+        let dimensions = Vector.minDim(this, vector);
+        let res = 0;
+
+        for(let dim = 0; dim &lt; dimensions; dim++){
+            res += this.getDim(dim) * vector.getDim(dim);
+        }
+
+        return res;
+
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * If the parameter is a(n):
+     * - Number: Div function for every dimension one by one
+     * - Vectorify-able: Divides the corresponding dimensions with one another
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {Vectorify-able|float} divisional 
+     */
+    div(divisional){
+        if(isNumber(divisional)){
+            this.map(dim => dim / divisional);
+        } else if(Vector.vectorifyable(divisional)){
+            let div = Vector.vectorify(divisional);
+            this.promote(div.dimensions);
+            this.map((dim, pos) => dim / div.dim(pos));
+        } else
+            throw 'Wrong argument';
+
+        return this;
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * If the parameter is a(n):
+     * - Integer: Modulo function for every dimension one by one
+     * - Vectorify-able: Mods the corresponding dimensions with one another
+     * 
+     * Returns itself so the function is chainable
+     * 
+     * @param {Vectorify-able|int} modulo 
+     */
+    mod(modulo){
+        if(isNumber(modulo)){
+            this.map(dim => mathMod(dim, modulo));
+        } else if(Vector.vectorifyable(modulo)){
+            let mod = Vector.vectorify(modulo);
+            this.promote(mod.dimensions);
+            this.map((dim, pos) => mathMod(dim, mod.dim(pos)));
+        } else
+            throw 'Wrong argument';
+
+        return this;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Returns true if the given argument can be vectorified and it is positionally identical in every dimensions
+     * 
+     * @param {any} comparedVariable
+     */
+    equals(comparedVariable){
+        if(!Vector.vectorifyable(comparedVariable))
+            return false;
+        let vector = Vector.vectorify(comparedVariable);
+        let dimensions = Vector.maxDim(this, vector);
+        for(let dim = 0; dim &lt; dimensions; dim++){
+            if(this.getDim(dim) != vector.getDim(dim))
+                return false;
+        }
+        return true;
+    }
+    
+    /**
+     * 
+     * Returns true if the given argument can be vectorified and it has the same number of dimensions "by nature" and are positionally identical in every dimensions to this
+     * 
+     * @param {any} comparedVariable
+     */
+    equalsExactly(comparedVariable){
+        if(!Vector.vectorifyable(comparedVariable))
+            return false;
+        let vector = Vector.vectorify(comparedVariable);
+        return this.dimensions === vector.dimensions &amp;&amp; this.equals(vector);
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Returns the "interdimensional" linear distance from the given vector
+     * 
+     * @param {Vectorify-able} vector 
+     */
+    distance(vector){
+        
+        let vec = Vector.vectorify(vector);
+
+        let result = 0;
+
+        let dimensions = Vector.maxDim(this, vec);
+        for(let dim = 0; dim &lt; dimensions; dim++){
+            result += Math.pow(this.getDim(dim) - vec.getDim(dim), 2);
+        }
+
+        return Math.sqrt(result);
+
+    }
+
+    /**
+     * 
+     * Returns whether or not this vector is actually defined in the given dimension
+     * 
+     * @param {int} dimension 
+     */
+    hasDimension(dimension){
+        return 0 &lt;= dimension &amp;&amp; dimension &lt; this.dimensions;
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Returns the copy of this vector's given subvector (follows the rules of the Array.slice function)
+     * If the parameters are ommited, the copy of the whole vector will be returned
+     * 
+     * @param {int} start 
+     * @param {int} end 
+     */
+    getSubVector(start = 0, end = this.dimensions){
+        return new Vector(this.toArray(start, end));
+    }
+
+    /**
+     * 
+     * Returns the array representation of this vector's given subvector (follows the rules of the Array.slice function)
+     * If the parameters are ommited, the whole vector will be converted
+     * 
+     * @param {int} start 
+     * @param {int} end 
+     */
+    toArray(start = 0, end = this.dimensions){
+        return this.innerCords.slice(start, end);
+    }
+
+    /**
+     * 
+     * Returns the string representation of this vector's given subvector (follows the rules of the Array.slice function)
+     * If the parameters are ommited, the whole vector will be converted
+     * 
+     * @param {int} start 
+     * @param {int} end 
+     */
+    toString(start = 0, end = this.dimensions){
+        return JSON.stringify(this.toArray(start, end));
+    }
+
+    /**
+     * 
+     * Returns the named dimension string representation of this vector's subvector
+     * If the parameter is ommited, the result will contain min(this.dimensions, 3)
+     * 
+     * @param {int} dimensions (0 &lt;= dimensions &lt;= 3)
+     */
+    toSimpleString(dimensions = undefined){
+        let dim = dimensions == undefined ? this.dimensions : dimensions;
+        switch(dim){
+            case 1:
+                return JSON.stringify(this.simple1D);
+            case 2:
+                return JSON.stringify(this.simple2D);
+            case 3:
+                return JSON.stringify(this.simple3D);
+            default:
+                return dim &lt; 1 ? JSON.stringify({}) : JSON.stringify(this.simple3D);
+        }
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Applyes the "func" function to every dimension one by one.
+     * The "func" function's arguments are:
+     * - current dimension
+     * - the index of the dimension
+     * 
+     * The "func" function's "this" will be the thisArg argument
+     * 
+     * If the "func" function has no return value / would return undefined, the dimension will remain unchanged
+     * 
+     * @param {Function} func 
+     * @param {Array} thisArg null by default
+     */
+    map(func, thisArg = null){
+        for(let dim = 0; dim &lt; this.dimensions; dim++){
+            let val = func.apply(thisArg, [this.innerCords[dim], dim]);
+            if(val !== undefined)
+                this.innerCords[dim] = val;
+        }
+
+        return this;
+    }
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    
+    
+
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    /**
+     * 
+     * Returns copy of the the sum of the two arguments' Vector representations if there is such
+     * 
+     * @param {Vectorify-able} vector1 
+     * @param {Vectorify-able|float} vector2 
+     */
+    static add(vector1, vector2){
+        return new Vector(vector1).add(vector2);
+    }
+
+    /**
+     * 
+     * Returns copy of the the difference of the two arguments' Vector representations if there is such
+     * 
+     * @param {Vectorify-able} vector1 
+     * @param {Vectorify-able|float} vector2 
+     */
+    static sub(vector1, vector2){
+        return new Vector(vector1).sub(vector2);
+    }
+
+    /**
+     * 
+     * Returns copy of the the negated value of the argument's Vector representation if there is such
+     * 
+     * @param {Vectorify-able} vector
+     */
+    static negate(vector){
+        return new Vector(vector).negate();
+    }
+
+    /**
+     * 
+     * Returns copy of the the multiplied value of the first argument's Vector representation if there is such
+     * 
+     * @param {Vectorify-able} vector
+     * @param {Vectorify-able|float} multiplier
+     */
+    static mul(vector, ...multipliers){
+        return new Vector(vector).mul(...multipliers);
+    }
+
+    /**
+     * 
+     * Returns the copy of the cross product of the two arguments' Vector representations if there is such
+     * 
+     * @param {...Vectorify-able|Vectorify-able[]} vectors 
+     */
+    static mulCross(...vectors){
+        let realVecArr = Array.isArray(vectors[0]) ? vectors[0] : vectors;
+        return new Vector(realVecArr[0]).mulCross(realVecArr.slice(1));
+    }
+
+    /**
+     * 
+     * Returns the copy of the scalar product of the two arguments' Vector representations if there is such
+     * 
+     * @param {Vectorify-able} vector1 
+     * @param {Vectorify-able} vector2 
+     */
+    static mulScal(vector1, vector2){
+        return Vector.vectorify(vector1).mulScal(vector2);
+    }
+
+    /**
+     * 
+     * Returns the copy of the divided value of the first argument's Vector representation if there is such
+     * 
+     * @param {Vectorify-able} vector
+     * @param {Vectorify-able|float} divisional
+     */
+    static div(vector, divisional){
+        return new Vector(vector).div(divisional);
+    }
+
+    /**
+     * 
+     * Returns the copy of the mod value of the first the argument's Vector representation if there is such
+     * 
+     * @param {Vectorify-able} vector
+     * @param {Vectorify-able|int} modulo 
+     */
+    static mod(vector, modulo){
+        return new Vector(vector).mod(modulo);
+    }
+
+    /**
+     * 
+     * Returns true if the two vectors' Vector representations are positionally identical in every dimensions if there is such
+     * 
+     * @param {Vectorify-able} vector1 
+     * @param {Vectorify-able} vector2 
+     */
+    static equals(vector1, vector2){
+        return new Vector(vector1).equals(vector2);
+    }
+    
+    /**
+     * 
+     * Returns true if the two vectors' Vector representations both have the same number of dimensions "by nature" and are positionally identical in every dimensions if there is such
+     * 
+     * @param {Vectorify-able} vector1 
+     * @param {Vectorify-able} vector2 
+     */
+    static equalsExactly(vector1, vector2){
+        return new Vector(vector1).equalsExactly(vector2);
+    }
+    
+    /**
+     * 
+     * Returns true if the two vectors' Vector representations "interdimensional" linear distance from the given vector if there is such
+     * 
+     * @param {Vectorify-able} vector1 
+     * @param {Vectorify-able} vector2 
+     */
+    static distance(vector1, vector2){
+        return new Vector(vector1).distance(vector2);
+    }
+
+    /**
+     * 
+     * Returns whether or not the (weak)vectorify function would throw an error
+     * 
+     * @param {any} vectorCandidate 
+     */
+    static vectorifyable(vectorCandidate){
+        return typeof vectorCandidate == 'object';
+    }
+
+    /**
+     * 
+     * If the parameter is a(n)
+     * - Vectorify-able: Returns it's reference
+     * - else: Throws an error
+     * 
+     * @param {Vectorify-able} vectorCandidate 
+     */
+    static vectorify(vectorCandidate){
+        if(Vector.isVector(vectorCandidate))
+            return vectorCandidate;
+        else if(typeof vectorCandidate == 'object')
+            return new Vector(vectorCandidate);
+        else
+            throw 'Wrong argument';
+    }
+
+    /**
+     * 
+     * If the parameter is a(n)
+     * - Vectorify-able: Returns it's reference
+     * - else: Returns it's reference
+     * 
+     * @param {*} vectorCandidate 
+     */
+    static weakVectorify(vectorCandidate){
+        try{
+            return Vector.vectorify(vectorCandidate);
+        } catch(err){
+            return vectorCandidate;
+        }
+    }
+
+    /**
+     * 
+     * Returns if the parameter is an instance of Vector
+     * 
+     * @param {*} vectorCandidate 
+     */
+    static isVector(vectorCandidate){
+        return vectorCandidate != undefined &amp;&amp; vectorCandidate.constructor.name === 'Vector';
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Returns the copy of vector.map(func, args)
+     * 
+     * @param {Vector} vector 
+     * @param {Function} func 
+     * @param {Array} thisArg null by default
+     */
+    static map(vector, func, thisArg = null){
+        return new Vector(vector).map(func, thisArg);
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 
+     * Returns the given Vectors' highest dimension
+     * 
+     * @param  {...Vector|Vector[]} args 
+     */
+    static maxDim(...args){
+
+        if(Array.isArray(arguments[0])){
+            return Vector.maxDim.apply(null, arguments[0]);
+        } else{
+            let res = 0;
+
+            for(let i = 0; i &lt; args.length; i++){
+                if(args[i].dimensions > res)
+                    res = args[i].dimensions;
+            }
+
+            return res;
+        }
+
+    }
+
+    /**
+     * 
+     * Returns the given Vectors' lowest dimension
+     * 
+     * @param  {...Vector|Vector[]} args 
+     */
+    static minDim(...args){
+
+        if(args.length == 0)
+            throw "Wrong arguments";
+        
+        if(Array.isArray(arguments[0])){
+            return Vector.maxDim.apply(null, arguments[0]);
+        } else{
+            let res = Infinity;
+
+            for(let i = 0; i &lt; args.length; i++){
+                if(args[i].dimensions &lt; res)
+                    res = args[i].dimensions;
+            }
+
+            return res;
+        }
+
+    }
+
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Vector.html">Vector</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Aug 26 2019 18:41:29 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

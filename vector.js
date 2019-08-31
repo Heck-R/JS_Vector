@@ -137,6 +137,15 @@ class Vector {
 
     /**
      * 
+     * Same as "new Vector(this)"
+     * 
+     */
+    get copy() {
+        return new Vector(this);
+    }
+
+    /**
+     * 
      * Returns how many dimensions this Vector has
      * 
      */

@@ -17,32 +17,54 @@ class Vector {
      * - Nothing: The Vector will be 0 dimensional
      * - One Vector: In this case this is a copy constructor
      * - A random object (except a "Number"): In this case searches for x,y,z coordinates, it's dimension becomes the highest possible and inherits the x,y,z coordinates
-     * - A JSON string of the above works the same
      * - arguments[0] == 'init' and arguments[1] a number which will be the vector's dimensions (every dimension's vaule is arguments[2] or 0 if omitted)
      * - One number parameter for every desired dimension. The given numbers will be the dimensions values
-     * - An array that contains one number parameter for every desired dimension. The given numbers will be the dimensions values
+     * - An array of the above 2 options
+     * - A JSON string of the above 4 options works the same
      * 
      */
     constructor(){
 
         this.innerCords;
 
+        this.generalConstructor(...arguments);
+
+    }
+
+    /**
+     * 
+     * Helper for the constructor (not for outer useage)
+     * Constructor: General
+     * 
+     * Reinitalizes the Vector.
+     * The arguments can be:
+     * - Nothing: The Vector will be 0 dimensional
+     * - One Vector: In this case this is a copy constructor
+     * - A random object (except a "Number"): In this case searches for x,y,z coordinates, it's dimension becomes the highest possible and inherits the x,y,z coordinates
+     * - arguments[0] == 'init' and arguments[1] a number which will be the vector's dimensions (every dimension's vaule is arguments[2] or 0 if omitted)
+     * - One number parameter for every desired dimension. The given numbers will be the dimensions values
+     * - An array of the above 2 options
+     * - A JSON string of the above 4 options works the same
+     * 
+     */
+    generalConstructor(){
+
         if(arguments.length === 0){
             this.constructorForEmpty();
         } else if( isNumber(arguments[0]) ){
-            this.constructorForNumbers.apply(this, arguments);
+            this.constructorForNumbers(...arguments);
         } else if(typeof arguments[0] === 'object'){
             if(Vector.isVector(arguments[0]))
-                this.constructorForCopy.apply(this, arguments);
+                this.constructorForCopy(arguments[0]);
             else if(Array.isArray(arguments[0]))
-                this.constructorForNumbers.apply(this, arguments[0]);
+                this.generalConstructor(...arguments[0]);
             else
-                this.constructorForObject.apply(this, arguments);
+                this.constructorForObject(arguments[0]);
         } else if(typeof arguments[0] === 'string'){
             if(arguments[0] === 'init')
-                this.constructorForInit(parseInt(arguments[1]), parseFloat( arguments[2]));
+                this.constructorForInit(parseInt(arguments[1]), parseFloat(arguments[2]));
             else
-                this.constructorForObject(JSON.parse(arguments[0]));
+                this.generalConstructor(JSON.parse(arguments[0]));
         } else{
             throw "Wrong argument(s)";
         }

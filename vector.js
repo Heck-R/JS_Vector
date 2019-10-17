@@ -62,7 +62,7 @@ class Vector {
                 this.constructorForObject(arguments[0]);
         } else if(typeof arguments[0] === 'string'){
             if(arguments[0] === 'init')
-                this.constructorForInit(parseInt(arguments[1]), parseFloat(arguments[2]));
+                this.constructorForInit(parseInt(arguments[1]), arguments[2] == undefined ? 0 : parseFloat(arguments[2]));
             else
                 this.generalConstructor(JSON.parse(arguments[0]));
         } else{
@@ -131,7 +131,7 @@ class Vector {
     constructorForInit(dimensions, defaultValue = 0){
         this.innerCords = [];
         for(let dim = 0; dim < dimensions; dim++){
-            this.innerCords.push( parseFloat(defaultValue) );
+            this.innerCords.push(defaultValue);
         }
     }
 
